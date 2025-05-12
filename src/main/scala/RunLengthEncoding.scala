@@ -3,26 +3,21 @@ import scala.annotation.tailrec
 object RunLengthEncoding:
    def encode(s: String): String =
       @tailrec
-      def loop(cs: List[Char], acc: String): String =
-         if cs.isEmpty then acc
-         else
-            val first: List[Char] = cs.takeWhile(_ == cs.head)
-            val l: String =
-               if first.length > 1 then acc.concat(first.length.toString.concat(cs.head.toString))
-               else acc.concat(cs.head.toString)
-            loop(if first.isEmpty then cs.tail else cs.dropWhile(_ == cs.head), l)
-
-      loop(s.toList, "").mkString
+      def loop(cs: List[Char], acc: String): String = cs match
+         case Nil => acc
+         case _   =>
+            val (first, rest) = cs.span(_ == cs.head)
+            loop(
+              rest.dropWhile(_ == cs.head),
+              acc + (if first.length > 1 then first.length.toString else "") + first.head)
+      loop(s.toList, "")
 
    def decode(s: String): String =
       @tailrec
-      def loop(cs: List[Char], acc: String): String =
-         if cs.isEmpty then acc
-         else
-            val i: String = cs.takeWhile(_.isDigit).mkString
-            val t: List[Char] = cs.drop(i.length)
-            loop(
-              cs.drop(i.length).dropWhile(_ == t.head),
-              acc.concat(t.head.toString * { if i.isEmpty then 1 else i.toInt }))
-
+      def loop(cs: List[Char], acc: String): String = cs match
+         case Nil => acc
+         case _   =>
+            val (digits, rest) = cs.span(_.isDigit)
+            val count = if digits.isEmpty then 1 else digits.mkString.toInt
+            loop(rest.drop(1), acc + rest.head.toString * count)
       loop(s.toList, "")
