@@ -1,19 +1,6 @@
 object RunLengthEncoding:
    def encode(s: String): String =
-      s.toList
-         .foldRight(List.empty[(Char, Int)]) {
-            case (c, (ch, cnt) :: tail) if c == ch => (ch, cnt + 1) :: tail
-            case (c, acc)                          => (c, 1) :: acc
-         }
-         .map { case (ch, cnt) => if cnt > 1 then s"$cnt$ch" else ch.toString }
-         .mkString
+      ("(.)\\1*".r findAllIn s).map(g => if g.length > 1 then g.length.toString + g.head else g.head).mkString
 
    def decode(s: String): String =
-      s.toList
-         .foldLeft(("", "")) {
-            case ((acc, digitBuffer), c) if c.isDigit => (acc, digitBuffer + c)
-            case ((acc, digitBuffer), ch)             =>
-               val count = if digitBuffer.isEmpty then 1 else digitBuffer.toInt
-               (acc + ch.toString * count, "")
-         }
-         ._1
+      ("(\\d*)(\\D)".r findAllMatchIn s).map(m => m.group(2) * m.group(1).toIntOption.getOrElse(1)).mkString
