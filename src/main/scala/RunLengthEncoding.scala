@@ -1,20 +1,19 @@
-import scala.annotation.tailrec
-
 object RunLengthEncoding:
    def encode(s: String): String =
-      @tailrec
-      def loop(cs: List[Char], acc: String): String = cs match
-         case Nil => acc
-         case _   =>
-            val (first, rest) = cs.span(_ == cs.head)
-            loop(rest, acc + (if first.length > 1 then first.length.toString else "") + first.head)
-      loop(s.toList, "")
+      s.toList
+         .foldRight(List.empty[(Char, Int)]) {
+            case (c, (ch, cnt) :: tail) if c == ch => (ch, cnt + 1) :: tail
+            case (c, acc)                          => (c, 1) :: acc
+         }
+         .map { case (ch, cnt) => if cnt > 1 then s"$cnt$ch" else ch.toString }
+         .mkString
 
    def decode(s: String): String =
-      @tailrec
-      def loop(cs: List[Char], acc: String): String = cs match
-         case Nil => acc
-         case _   =>
-            val (digits, rest) = cs.span(_.isDigit)
-            loop(rest.drop(1), acc + rest.head.toString * (if digits.isEmpty then 1 else digits.mkString.toInt))
-      loop(s.toList, "")
+      s.toList
+         .foldLeft(("", "")) {
+            case ((acc, digitBuffer), c) if c.isDigit => (acc, digitBuffer + c)
+            case ((acc, digitBuffer), ch)             =>
+               val count = if digitBuffer.isEmpty then 1 else digitBuffer.toInt
+               (acc + ch.toString * count, "")
+         }
+         ._1
